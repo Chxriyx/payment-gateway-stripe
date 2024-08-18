@@ -12,8 +12,7 @@ use App\Models\Order;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
-
-
+use Laravel\Jetstream\Jetstream;
 
 class CheckoutController extends Controller
 {
@@ -47,7 +46,9 @@ class CheckoutController extends Controller
                 'success_url' => route('checkout.success') . '?session_id={CHECKOUT_SESSION_ID}',
             ]);
 
-            return redirect()->away($session->url, 303);
+            return Jetstream::inertia()->render($request, 'Cart', [
+                'sessionURL' => $session->url,
+            ]);
             
         } catch (\Exception $e) {
             return response()->json(['error' => $e->getMessage()], 500);

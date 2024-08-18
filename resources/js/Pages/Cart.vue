@@ -1,14 +1,23 @@
 <script setup>
 import { ref, computed } from 'vue';
 import axios from 'axios';
+import { useForm } from '@inertiajs/vue3';
 
 const props = defineProps({
   products: Array,
   cart: Object,
+  sessionURL: {
+        default: ''
+    },
 });
 
 const updatedProducts = ref([...props.products]);
 const updatedCart = ref({ ...props.cart });
+
+const form = useForm({
+    _method: 'POST',
+    processing: false,
+});
 
 const removeFromCart = (productId) => {
   axios.post(route('cart.remove', { product_id: productId }))
@@ -21,9 +30,27 @@ const removeFromCart = (productId) => {
     });
 };
 
-const proceedToCheckout = () => {
-  axios.post(route('checkout'));
-};
+
+const proceedToCheckout = async () => {
+    try {
+        form.processing = true;
+        form.post(route('checkout'), {
+            errorBag: 'stripePayment',
+            preserveState: true,
+            preserveScroll: true,
+            onSuccess: () => {
+                window.location.href = props.sessionURL;
+                form.processing = false;
+            },
+            onError: (error) => {
+              console.log(error);
+            }
+        })
+
+    } catch (error) {
+        console.log(error);
+    }
+}
 
 const totalPrice = computed(() => {
   return updatedProducts.value.reduce((total, product) => {
